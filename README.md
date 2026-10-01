@@ -1,40 +1,109 @@
 # 🚀 TeamTask Backend API
 
-**TeamTask** is a robust, modular, and scalable RESTful API built with **Node.js, Express.js, MongoDB, and Mongoose** for collaborative task and project management. Designed with production-style clean architecture, request validation, authentication, authorization, rate limiting, and automated security scanning workflows.
+**TeamTask** is a robust, modular, and scalable RESTful API built with **Node.js, Express.js, MongoDB, and Mongoose** for collaborative task and project management. Designed with production-style clean architecture, request validation, authentication, authorization, rate limiting, Docker containerization, and automated security scanning workflows.
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## ✅ Functional Verification & Feature Status
 
-- **Runtime Environment**: Node.js (v18+)
-- **Web Framework**: Express.js
-- **Database & ODM**: MongoDB & Mongoose
-- **Authentication**: JWT (JSON Web Tokens) & bcryptjs
-- **Security**: Helmet, CORS, Express Rate Limit
-- **Request Validation**: Express-Validator
-- **CI/CD Security Scanning**: GitHub Actions (SonarQube & Trivy)
+All core requirements and features requested for the backend have been fully built, structured, and verified:
+
+| Feature Area | Description | Implementation Status |
+| :--- | :--- | :---: |
+| **Authentication System** | Registration (`/api/auth/register`), Login (`/api/auth/login`), Profile (`/api/auth/me`), bcrypt password hashing, JWT creation & verification middleware | ✅ Completed |
+| **Project Management** | Create project, list user projects, retrieve single project, update project, delete project (owner only), add/remove team members with roles (`owner`, `admin`, `member`) | ✅ Completed |
+| **Task Management** | Create task inside project, filter project tasks by status/priority/assignee/search, update task status (`todo`, `in_progress`, `completed`), priority (`low`, `medium`, `high`, `urgent`), assign member, delete task | ✅ Completed |
+| **Invitation Foundation** | Create invitation token for email, list project invitations, accept invitation token (`/api/invitations/accept/:token`), reject invitation token | ✅ Completed |
+| **Authorization & Security** | Member/Owner check middleware (`projectAuth.middleware.js`), rate limiting on auth endpoints (`rateLimiter.middleware.js`), Helmet headers, CORS policy | ✅ Completed |
+| **Health Check & Errors** | Centralized error handler (`error.middleware.js`), consistent API response format (`ApiResponse`), `GET /api/health` system & database status | ✅ Completed |
+| **Containerization** | Dockerfile & Docker Compose (`docker-compose.yml`) running Node.js backend and Dockerized MongoDB | ✅ Completed |
+| **CI/CD & Security Scan** | GitHub Actions workflow (`ci-cd-scan.yml`) with SonarQube & Trivy static security analysis | ✅ Completed |
+
+---
+
+## 🐳 Docker & Docker Compose Setup (Recommended)
+
+You can spin up the entire application stack—including **MongoDB** in Docker—with a single command!
+
+### 1. Run with Docker Compose
+```bash
+docker-compose up --build
+```
+
+This will:
+1. Launch a **MongoDB** container (`teamtask_mongodb`) listening on `mongodb://localhost:27017`.
+2. Wait for MongoDB healthcheck to succeed.
+3. Build and launch the **TeamTask Express Backend** container (`teamtask_backend`) listening on `http://localhost:5000`.
+
+### 2. Stop Docker Stack
+```bash
+docker-compose down
+```
+
+To remove persistent database volumes as well:
+```bash
+docker-compose down -v
+```
+
+---
+
+## 💻 Manual Setup & Local Running Instructions
+
+If running without Docker:
+
+### 1. Prerequisites
+- Node.js (v18+)
+- Local or Remote MongoDB instance
+
+### 2. Installation
+```bash
+git clone <repository_url>
+cd freelancing
+npm install
+```
+
+### 3. Environment Configuration
+Copy the `.env.example` file to `.env`:
+```bash
+cp .env.example .env
+```
+
+### 4. Run Server
+- **Development Mode** (with nodemon auto-reloading):
+  ```bash
+  npm run dev
+  ```
+- **Production Mode**:
+  ```bash
+  npm start
+  ```
 
 ---
 
 ## 🌲 Git Branching Strategy
 
-Our repository strictly follows a 3-branch strategy with **no `main` branch**:
+Our repository follows a strict 3-branch strategy with **no `main` branch**:
 - `dev` - Primary integration branch for active development.
 - `stage` - Staging branch for pre-production QA testing.
 - `prod` - Production-ready release branch.
 
-### Feature Workflow:
-1. All feature work is isolated in dedicated feature branches created off `dev` (e.g., `feature/auth`, `feature/projects`, `feature/tasks-and-invitations`, `feature/security-and-ci`).
-2. Completed features are committed within their feature branch and merged back into `dev`.
+### Feature Branches Merged into `dev`:
+1. `feature/auth` - User registration, login, JWT middleware, health check, user model.
+2. `feature/projects` - Project model, authorization middleware, project controller & routes.
+3. `feature/tasks-and-invitations` - Task & invitation models, services, controllers, validators & routes.
+4. `feature/security-and-ci` - GitHub Actions CI/CD SonarQube & Trivy scan workflows.
+5. `feature/docker-setup` - Dockerfile, `.dockerignore`, `docker-compose.yml` with containerized MongoDB.
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Directory Structure
 
 ```
 .
 ├── .env.example
-├── .gitignore
+├── .dockerignore
+├── Dockerfile
+├── docker-compose.yml
 ├── README.md
 ├── package.json
 ├── .github/
@@ -89,268 +158,56 @@ Our repository strictly follows a 3-branch strategy with **no `main` branch**:
 
 ---
 
-## ⚙️ Environment Variables (`.env.example`)
+## 📖 API Endpoint Reference
 
-| Variable | Description | Default / Example |
-| :--- | :--- | :--- |
-| `PORT` | Application server port | `5000` |
-| `NODE_ENV` | Environment mode (`development`/`production`/`test`) | `development` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb://127.0.0.1:27017/teamtask_db` |
-| `JWT_SECRET` | Secret key for signing JWT tokens | `super_secret_jwt_key_teamtask_2026` |
-| `JWT_EXPIRES_IN` | JWT expiration duration | `7d` |
-| `CORS_ORIGIN` | Allowed client origins for CORS | `http://localhost:3000` |
+### 🩺 Health Check
+- **`GET /api/health`** - Checks API and MongoDB health status.
 
----
+### 🔐 Authentication
+- **`POST /api/auth/register`** - Register new user (Body: `name`, `email`, `password`)
+- **`POST /api/auth/login`** - Login user (Body: `email`, `password`)
+- **`GET /api/auth/me`** - Fetch current user profile (Header: `Authorization: Bearer <token>`)
 
-## 🚀 Setup & Local Running Instructions
+### 📂 Projects
+- **`POST /api/projects`** - Create new project
+- **`GET /api/projects`** - Retrieve projects for authenticated user
+- **`GET /api/projects/:id`** - Get single project details (requires project membership)
+- **`PUT /api/projects/:id`** - Update project (owner or admin)
+- **`DELETE /api/projects/:id`** - Delete project (owner only)
+- **`POST /api/projects/:id/members`** - Add member to project
+- **`DELETE /api/projects/:id/members/:userId`** - Remove member from project
 
-### 1. Prerequisites
-- Node.js (v18+)
-- MongoDB server running locally or via MongoDB Atlas connection URI
+### 📋 Tasks
+- **`POST /api/projects/:projectId/tasks`** - Create task inside project
+- **`GET /api/projects/:projectId/tasks`** - Retrieve project tasks (Query filters: `status`, `priority`, `assignedTo`, `search`)
+- **`GET /api/tasks/:id`** - Get single task
+- **`PUT /api/tasks/:id`** - Update task status, priority, assignee, due date
+- **`DELETE /api/tasks/:id`** - Delete task
 
-### 2. Installation
-```bash
-git clone <repository_url>
-cd freelancing
-npm install
-```
-
-### 3. Environment Configuration
-Copy the `.env.example` file to `.env`:
-```bash
-cp .env.example .env
-```
-
-### 4. Running the Backend
-- **Development Mode** (with nodemon auto-reloading):
-  ```bash
-  npm run dev
-  ```
-- **Production Mode**:
-  ```bash
-  npm start
-  ```
-
-The API server will run at `http://localhost:5000/api`.
+### ✉️ Invitations
+- **`POST /api/projects/:projectId/invitations`** - Generate project member invitation
+- **`GET /api/projects/:projectId/invitations`** - View project invitations
+- **`POST /api/invitations/accept/:token`** - Accept invitation token
+- **`POST /api/invitations/reject/:token`** - Reject invitation token
 
 ---
 
-## 📖 API Documentation & Endpoints
+## 📊 API Response Standards
 
-### 🩺 Health Check Endpoint
-- **`GET /api/health`**
-  - **Auth Required**: No
-  - **Description**: Returns backend API server & MongoDB connection health status.
-  - **Response (200 OK)**:
-    ```json
-    {
-      "success": true,
-      "message": "TeamTask API is running smoothly",
-      "data": {
-        "status": "UP",
-        "timestamp": "2026-10-01T11:00:00.000Z",
-        "uptime": 12.34,
-        "database": "connected"
-      }
-    }
-    ```
-
----
-
-### 🔐 Authentication Endpoints
-
-#### 1. `POST /api/auth/register`
-- **Auth Required**: No (Rate limited)
-- **Request Body**:
-  ```json
-  {
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "password": "securePassword123"
-  }
-  ```
-- **Response (201 Created)**:
-  ```json
-  {
-    "success": true,
-    "message": "User registered successfully",
-    "data": {
-      "user": {
-        "id": "651a2b3c4d5e6f7a8b9c0d1e",
-        "name": "Jane Doe",
-        "email": "jane@example.com",
-        "role": "user",
-        "avatar": "",
-        "createdAt": "2026-10-01T11:00:00.000Z"
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-    }
-  }
-  ```
-
-#### 2. `POST /api/auth/login`
-- **Auth Required**: No (Rate limited)
-- **Request Body**:
-  ```json
-  {
-    "email": "jane@example.com",
-    "password": "securePassword123"
-  }
-  ```
-- **Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "message": "User logged in successfully",
-    "data": {
-      "user": {
-        "id": "651a2b3c4d5e6f7a8b9c0d1e",
-        "name": "Jane Doe",
-        "email": "jane@example.com",
-        "role": "user"
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-    }
-  }
-  ```
-
-#### 3. `GET /api/auth/me`
-- **Auth Required**: Yes (`Authorization: Bearer <token>`)
-- **Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "message": "User profile retrieved successfully",
-    "data": {
-      "user": {
-        "_id": "651a2b3c4d5e6f7a8b9c0d1e",
-        "name": "Jane Doe",
-        "email": "jane@example.com",
-        "role": "user",
-        "avatar": ""
-      }
-    }
-  }
-  ```
-
----
-
-### 📂 Project Endpoints
-
-#### 1. `POST /api/projects`
-- **Auth Required**: Yes
-- **Request Body**:
-  ```json
-  {
-    "name": "E-Commerce Revamp",
-    "description": "Redesigning checkout flow and product recommendation engine"
-  }
-  ```
-- **Response (201 Created)**
-
-#### 2. `GET /api/projects`
-- **Auth Required**: Yes
-- **Description**: Retrieves all projects where current user is owner or member.
-
-#### 3. `GET /api/projects/:id`
-- **Auth Required**: Yes (Must be member or owner of project)
-
-#### 4. `PUT /api/projects/:id`
-- **Auth Required**: Yes (Must be owner or admin of project)
-- **Request Body**:
-  ```json
-  {
-    "name": "E-Commerce Platform v2",
-    "status": "active"
-  }
-  ```
-
-#### 5. `DELETE /api/projects/:id`
-- **Auth Required**: Yes (Must be owner of project)
-
-#### 6. `POST /api/projects/:id/members`
-- **Auth Required**: Yes (Owner or Admin)
-- **Request Body**:
-  ```json
-  {
-    "userId": "651a99994d5e6f7a8b9c0d99",
-    "role": "member"
-  }
-  ```
-
----
-
-### 📋 Task Endpoints
-
-#### 1. `POST /api/projects/:projectId/tasks`
-- **Auth Required**: Yes (Must be project member)
-- **Request Body**:
-  ```json
-  {
-    "title": "Design Database Schema",
-    "description": "Create ER diagrams for users, projects, and tasks",
-    "priority": "high",
-    "status": "todo",
-    "assignedTo": "651a2b3c4d5e6f7a8b9c0d1e",
-    "dueDate": "2026-10-15T00:00:00.000Z"
-  }
-  ```
-
-#### 2. `GET /api/projects/:projectId/tasks`
-- **Auth Required**: Yes (Must be project member)
-- **Query Filters**: `?status=todo&priority=high&search=schema`
-
-#### 3. `GET /api/tasks/:id`
-- **Auth Required**: Yes (Must be project member)
-
-#### 4. `PUT /api/tasks/:id`
-- **Auth Required**: Yes
-- **Request Body**:
-  ```json
-  {
-    "status": "in_progress",
-    "priority": "urgent"
-  }
-  ```
-
-#### 5. `DELETE /api/tasks/:id`
-- **Auth Required**: Yes
-
----
-
-### ✉️ Invitation Endpoints
-
-- **`POST /api/projects/:projectId/invitations`** (Owner/Admin creates member invitation token)
-- **`GET /api/projects/:projectId/invitations`** (View pending project invitations)
-- **`POST /api/invitations/accept/:token`** (Authenticated user accepts invitation)
-- **`POST /api/invitations/reject/:token`** (Reject invitation token)
-
----
-
-## 🔍 Security Scanning (Trivy & SonarQube)
-
-This codebase is configured with GitHub Actions (`.github/workflows/ci-cd-scan.yml`) to automatically perform static analysis & vulnerability scanning:
-- **SonarQube**: Detects code smells, security hotspots, duplication, and coverage.
-- **Trivy**: Scans node package dependencies and filesystem for CVEs.
-
----
-
-## 🎨 Consistent API Response Format
-
-#### Success Format:
+#### Success Response:
 ```json
 {
   "success": true,
-  "message": "Resource operating message",
+  "message": "Operation completed successfully",
   "data": { ... }
 }
 ```
 
-#### Error Format:
+#### Error Response:
 ```json
 {
   "success": false,
-  "message": "Error description message",
+  "message": "Validation Failed / Unauthorized access",
   "errors": [
     {
       "field": "email",

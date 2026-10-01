@@ -13,7 +13,7 @@ on:
       - prod
 
 jobs:
-  trivy-filesystem-scan:
+  trivy-filesystem-scan-job:
     name: Trivy Filesystem Security Scanner
     runs-on: ubuntu-latest
     steps:
@@ -40,7 +40,7 @@ jobs:
           path: trivy-fs-report.txt
           retention-days: 3
 
-  trivy-docker-image-scan:
+  trivy-docker-image-scan-job:
     name: Trivy Docker Image Vulnerability Scanner
     runs-on: ubuntu-latest
     steps:
@@ -73,7 +73,7 @@ jobs:
           path: trivy-docker-report.txt
           retention-days: 3
 
-  sonarqube-code-scan:
+  sonarqube-code-scan-job:
     name: SonarQube Code Quality, Coverage & Security Gate
     runs-on: ubuntu-latest
     steps:
@@ -103,7 +103,7 @@ jobs:
           retention-days: 3
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v3
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

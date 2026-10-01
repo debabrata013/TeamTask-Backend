@@ -57,8 +57,8 @@ If running without Docker:
 
 ### 2. Installation
 ```bash
-git clone <repository_url>
-cd freelancing
+git clone https://github.com/debabrata013/TeamTask-Backend.git
+cd TeamTask-Backend
 npm install
 ```
 

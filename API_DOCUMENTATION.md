@@ -297,6 +297,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   "success": true,
   "message": "Project deleted successfully",
   "data": null
+  
 }
 ```
 

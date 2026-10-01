@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner on filesystem
         uses: aquasecurity/trivy-action@master
@@ -45,10 +45,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Docker Image
         run: |
@@ -74,24 +74,36 @@ jobs:
           retention-days: 3
 
   sonarqube-code-scan:
-    name: SonarQube Code Quality & Security Gate
+    name: SonarQube Code Quality, Coverage & Security Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
         run: npm install
 
+      - name: Generate Code Coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Upload Code Coverage Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-coverage-report
+          path: coverage/
+          retention-days: 3
+
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v8.3.0
+        uses: SonarSource/sonarqube-scan-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

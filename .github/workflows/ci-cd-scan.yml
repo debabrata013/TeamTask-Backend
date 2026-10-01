@@ -13,12 +13,12 @@ on:
       - prod
 
 jobs:
-  trivy-security-scan:
-    name: Trivy Vulnerability & Security Scanner
+  trivy-filesystem-scan:
+    name: Trivy Filesystem Security Scanner
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v3
 
       - name: Run Trivy vulnerability scanner on filesystem
         uses: aquasecurity/trivy-action@master
@@ -26,10 +26,52 @@ jobs:
           scan-type: "fs"
           scan-ref: "."
           format: "table"
+          output: "trivy-fs-report.txt"
           exit-code: "0"
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Upload Filesystem Scan Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-fs-scan-report
+          path: trivy-fs-report.txt
+          retention-days: 3
+
+  trivy-docker-image-scan:
+    name: Trivy Docker Image Vulnerability Scanner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Image
+        run: |
+          docker build -t teamtask-backend:latest .
+
+      - name: Run Trivy scanner on Docker Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "teamtask-backend:latest"
+          scan-type: "image"
+          format: "table"
+          output: "trivy-docker-report.txt"
+          exit-code: "0"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      - name: Upload Docker Image Scan Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-docker-scan-report
+          path: trivy-docker-report.txt
+          retention-days: 3
 
   sonarqube-code-scan:
     name: SonarQube Code Quality & Security Gate
@@ -46,7 +88,7 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v2
